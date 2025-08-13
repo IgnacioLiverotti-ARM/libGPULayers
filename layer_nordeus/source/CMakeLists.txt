@@ -43,7 +43,8 @@ add_library(
     ${VK_LAYER} SHARED
         ../../source_common/framework/entry.cpp
         device.cpp
-        instance.cpp)
+        instance.cpp
+		layer_device_functions_render_pass.cpp)
 
 target_include_directories(
     ${VK_LAYER} PRIVATE
