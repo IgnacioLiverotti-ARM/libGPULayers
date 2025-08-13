@@ -32,6 +32,32 @@
 
 extern std::mutex g_vulkanLock;
 
+void CheckRenderPassForMultisample(const VkAttachmentDescription* attachments, uint32_t count)
+{
+	LAYER_LOG("IGNACIO: Invoking CheckRenderPassForMultisample. Count: %d.", count);
+	
+    for (uint32_t i = 0; i < count; ++i)
+	{
+        if (attachments[i].samples != VK_SAMPLE_COUNT_1_BIT)
+		{
+            LAYER_LOG("IGNACIO: Render pass has multisample attachment [%d]: sample count = %d\n", i, attachments[i].samples);
+        }
+    }
+}
+
+void CheckRenderPass2ForMultisample(const VkAttachmentDescription2* attachments, uint32_t count)
+{
+	LAYER_LOG("IGNACIO: Invoking CheckRenderPass2ForMultisample. Count: %d.", count);
+	
+    for (uint32_t i = 0; i < count; ++i)
+	{
+        if (attachments[i].samples != VK_SAMPLE_COUNT_1_BIT)
+		{
+            LAYER_LOG("IGNACIO: Render pass2 has multisample attachment [%d]: sample count = %d\n", i, attachments[i].samples);
+        }
+    }
+}
+
 /* See Vulkan API for documentation. */
 template<>
 VKAPI_ATTR VkResult VKAPI_CALL layer_vkCreateRenderPass<user_tag>(VkDevice device,
@@ -40,25 +66,23 @@ VKAPI_ATTR VkResult VKAPI_CALL layer_vkCreateRenderPass<user_tag>(VkDevice devic
                                                                   VkRenderPass* pRenderPass)
 {
     LAYER_TRACE(__func__);
-
+	
+	CheckRenderPassForMultisample(pCreateInfo->pAttachments, pCreateInfo->attachmentCount);
+    
     // Hold the lock to access layer-wide global store
     std::unique_lock<std::mutex> lock {g_vulkanLock};
     auto* layer = Device::retrieve(device);
 
     // Release the lock to call into the driver
     lock.unlock();
-    VkResult ret = layer->driver.vkCreateRenderPass(device, pCreateInfo, pAllocator, pRenderPass);
+	VkResult ret = layer->driver.vkCreateRenderPass(device, pCreateInfo, pAllocator, pRenderPass);
     if (ret != VK_SUCCESS)
     {
         return ret;
     }
 	
-	LAYER_LOG("NORDEUS: Invoking layer_vkCreateRenderPass");
+	LAYER_LOG("IGNACIO: Invoking layer_vkCreateRenderPass");
 
-    // Retake the lock to access layer-wide global store
-    /*lock.lock();
-    auto& tracker = layer->getStateTracker();
-    tracker.createRenderPass(*pRenderPass, *pCreateInfo);*/
     return VK_SUCCESS;
 }
 
@@ -70,6 +94,8 @@ VKAPI_ATTR VkResult VKAPI_CALL layer_vkCreateRenderPass2<user_tag>(VkDevice devi
                                                                    VkRenderPass* pRenderPass)
 {
     LAYER_TRACE(__func__);
+	
+	CheckRenderPass2ForMultisample(pCreateInfo->pAttachments, pCreateInfo->attachmentCount);
 
     // Hold the lock to access layer-wide global store
     std::unique_lock<std::mutex> lock {g_vulkanLock};
@@ -83,12 +109,8 @@ VKAPI_ATTR VkResult VKAPI_CALL layer_vkCreateRenderPass2<user_tag>(VkDevice devi
         return ret;
     }
 	
-	LAYER_LOG("NORDEUS: Invoking layer_vkCreateRenderPass2");
+	LAYER_LOG("IGNACIO: Invoking layer_vkCreateRenderPass2");
 
-    // Retake the lock to access layer-wide global store
-    /*lock.lock();
-    auto& tracker = layer->getStateTracker();
-    tracker.createRenderPass(*pRenderPass, *pCreateInfo);*/
     return VK_SUCCESS;
 }
 
@@ -100,6 +122,8 @@ VKAPI_ATTR VkResult VKAPI_CALL layer_vkCreateRenderPass2KHR<user_tag>(VkDevice d
                                                                       VkRenderPass* pRenderPass)
 {
     LAYER_TRACE(__func__);
+	
+	CheckRenderPass2ForMultisample(pCreateInfo->pAttachments, pCreateInfo->attachmentCount);
 
     // Hold the lock to access layer-wide global store
     std::unique_lock<std::mutex> lock {g_vulkanLock};
@@ -113,11 +137,9 @@ VKAPI_ATTR VkResult VKAPI_CALL layer_vkCreateRenderPass2KHR<user_tag>(VkDevice d
         return ret;
     }
 	
-	LAYER_LOG("NORDEUS: Invoking layer_vkCreateRenderPass2KHR");
+	LAYER_LOG("IGNACIO: Invoking layer_vkCreateRenderPass2KHR");
 
-    // Retake the lock to access layer-wide global store
-    /*lock.lock();
-    auto& tracker = layer->getStateTracker();
-    tracker.createRenderPass(*pRenderPass, *pCreateInfo);*/
     return VK_SUCCESS;
 }
+
+
